@@ -10,7 +10,7 @@ class UserRead(schemas.BaseUser[int]):
     is_superuser: bool | None = False
     is_verified: bool | None = False
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
