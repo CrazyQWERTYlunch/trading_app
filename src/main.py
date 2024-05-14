@@ -1,3 +1,8 @@
+"""
+This file serves as the entry point to the Trading App application.
+It contains the configuration of FastAPI and integrates various components of the application,
+such as routers, authentication settings, CORS Middleware, and caching settings using Redis.
+"""
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,12 +19,15 @@ from src.tasks.router import router as router_tasks
 from src.pages.router import router as router_pages
 from src.chat.router import router as router_chat
 
+# Создаем экземпляр FastAPI
 app = FastAPI(
     title="Trading App"
 )
 
+# Монтируем статические файлы
 app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
+# Включаем маршруты аутентификации и регистрации пользователей
 app.include_router(
     fastapi_users.get_auth_router(auth_backend),
     prefix="/auth",
@@ -37,7 +45,7 @@ app.include_router(router_tasks)
 app.include_router(router_pages)
 app.include_router(router_chat)
 
-
+# Устанавливаем CORS (Cross-Origin Resource Sharing) Middleware для разрешения запросов с других доменов
 origins = [
     "http://localhost:8000",
 ]
@@ -54,6 +62,15 @@ app.add_middleware(
 
 
 async def startup_event():
+    """
+    Function called when the FastAPI application starts up.
+
+    It establishes a connection with Redis and initializes FastAPICache
+    for caching data in the application.
+
+    Returns:
+        None
+    """
     redis = aioredis.from_url(f"redis://{REDIS_HOST}:{REDIS_PORT}", encoding="utf8", decode_responses=True)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 app.add_event_handler("startup", startup_event)

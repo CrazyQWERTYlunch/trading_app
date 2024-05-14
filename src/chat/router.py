@@ -1,3 +1,11 @@
+"""
+Module for chat functionality including WebSocket connections and message broadcasting.
+
+This module defines routes for handling WebSocket connections and message broadcasting
+in the chat application. It also provides an endpoint to retrieve the last 5 messages
+from the chat history.
+
+"""
 from typing import List
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
@@ -16,20 +24,57 @@ router = APIRouter(
 
 
 class ConnectionManager:
+    """
+    Manages WebSocket connections and message broadcasting.
+
+    Attributes:
+        active_connections (List[WebSocket]): A list of active WebSocket connections.
+
+    """
     def __init__(self):
         self.active_connections: List[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
+        """
+        Accepts a new WebSocket connection.
+
+        Args:
+            websocket (WebSocket): The WebSocket connection to accept.
+
+        """
         await websocket.accept()
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
+        """
+        Disconnects a WebSocket connection.
+
+        Args:
+            websocket (WebSocket): The WebSocket connection to disconnect.
+
+        """
         self.active_connections.remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
+        """
+        Sends a personal message to a WebSocket client.
+
+        Args:
+            message (str): The message to send.
+            websocket (WebSocket): The WebSocket connection to send the message to.
+
+        """
         await websocket.send_text(message)
 
     async def broadcast(self, message: str, add_to_db: bool):
+        """
+        Broadcasts a message to all WebSocket clients.
+
+        Args:
+            message (str): The message to broadcast.
+            add_to_db (bool): Whether to add the message to the database.
+
+        """
         if add_to_db:
             await self.add_messages_to_database(message)
         for connection in self.active_connections:
@@ -52,6 +97,13 @@ manager = ConnectionManager()
 async def get_last_messages(
         session: AsyncSession = Depends(get_async_session),
 ) -> List[MessagesModel]:
+    """
+        Adds a message to the database.
+
+        Args:
+            message (str): The message to add to the database.
+
+    """
     query = select(Messages).order_by(Messages.id.desc()).limit(5)
     messages = await session.execute(query)
     return messages.scalars().all()
@@ -59,6 +111,16 @@ async def get_last_messages(
 
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: int):
+    """
+    Retrieves the last 5 messages from the chat history.
+
+    Args:
+        session (AsyncSession): The asynchronous database session.
+
+    Returns:
+        List[MessagesModel]: A list of the last 5 messages.
+
+    """
     await manager.connect(websocket)
     try:
         while True:

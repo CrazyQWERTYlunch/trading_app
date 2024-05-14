@@ -1,3 +1,7 @@
+"""
+This file provides database configuration and utilities for asynchronous database sessions.
+It establishes a connection to the PostgreSQL database using SQLAlchemy's async features.
+"""
 from typing import AsyncGenerator
 
 from sqlalchemy import MetaData
@@ -16,5 +20,11 @@ async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Asynchronous generator function for getting a database session.
+
+    Returns:
+        AsyncSession: An asynchronous database session.
+    """
     async with async_session_maker() as session:
         yield session

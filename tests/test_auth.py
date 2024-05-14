@@ -1,3 +1,12 @@
+"""
+Tests for authentication functionality.
+
+This module contains tests for adding roles and registering users.
+
+Attributes:
+    client (TestClient): Test client for making HTTP requests.
+    async_session_maker (sessionmaker): Async session maker for database operations.
+"""
 import pytest
 from sqlalchemy import insert, select
 
@@ -6,6 +15,14 @@ from conftest import client, async_session_maker
 
 
 async def test_add_role():
+    """
+    Test adding a role to the database.
+
+    This test checks if a role is successfully added to the database.
+
+    Returns:
+        None
+    """
     async with async_session_maker() as session:
         stmt = insert(role).values(id=1, name="admin", permissions=None)
         await session.execute(stmt)
@@ -16,6 +33,14 @@ async def test_add_role():
         assert result.all() == [(1, 'admin', None)], "Роль не добавилась"
 
 def test_register():
+    """
+    Test user registration.
+
+    This test checks the registration endpoint for registering a user.
+
+    Returns:
+        None
+    """
     response = client.post("/auth/register", json={
         "email": "string_313132",
         "password": "string_313132",
